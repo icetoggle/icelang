@@ -84,3 +84,13 @@ yyerror(char *s, ...)
 	fprintf(stderr, "\n");
 }
 
+static unsigned symhash(char *sym) {
+	unsigned int hash = 0;
+	unsigned c;
+	while (c = *sym++) hash = hash * 9 ^ c;
+	return hash;
+}
+
+struct symlist *newsymlist(struct symbol *sym, struct symlist *next) {
+
+}
