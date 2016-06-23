@@ -40,6 +40,7 @@ EXP	([Ee][-+]?[0-9]+)
 "while" { return WHILE; }
 "do"    { return DO; }
 "let"   { return LET;}
+"end"	{ return END;}
 
  /* built in functions */
 "sqrt"  { yylval.fn = B_sqrt; return FUNC; }

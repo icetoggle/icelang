@@ -1,5 +1,6 @@
 #pragma once
 extern int yylineno;
+extern int debug;
 void yyerror(char *s, ...);
 
 struct ast {
@@ -61,11 +62,6 @@ struct flow {
 	struct ast *cond;
 	struct ast *tl;
 	struct ast *el;
-};
-
-struct numval {
-	int nodetype;
-	double number;
 };
 
 struct symref {
