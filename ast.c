@@ -88,6 +88,28 @@ double eval(struct ast *a) {
 		}
 		break;
 	}
+	case 'E':
+	{
+		struct flow* f = (struct flow*)a;
+		if (f->cond == NULL || eval(f->cond)) {
+			if (f->tl) {
+				v = eval(f->tl);
+			}
+			else {
+				v = 0;
+			}
+		}
+		else {
+			if (f->el) {
+				v = eval(f->el);
+			}
+			else {
+				v = 0;
+			}
+
+		}
+		break;
+	}
 	case 'W':
 	{
 		struct flow *f = (struct flow*)a;
@@ -129,7 +151,7 @@ void treefree(struct ast *a) {
 	case 'L':
 		treefree(a->r);
 	case '|':
-	case 'M': case 'C': case 'F':
+	case 'M': case 'C': case 'F': case 'E':
 		treefree(a->l);
 	case 'K': case 'N':
 		break;

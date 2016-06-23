@@ -17,23 +17,27 @@
 %token <s> NAME
 %token <fn> FUNC
 %token EOL
-%token IF THEN ELSE WHILE DO END LET
+%token IF THEN ELSE WHILE DO END LET ELSEIF
 
 %nonassoc <fn> CMP
 %right '='
 %left '+' '-'
 %left '*' '/'
 %nonassoc '|' UMINUS
-%type <a> exp stmt list explist
+%type <a> exp stmt list explist elseif
 %type <sl> symlist
 
 %start calclist
 %%
 stmt: IF exp THEN list END {$$ = newflow('I',$2,$4,NULL);}
-	| IF exp THEN list ELSE list END {$$ = newflow('I',$2,$4,$6);}
+	| IF exp THEN list elseif {$$ = newflow('I',$2,$4, $5);}
 	| WHILE exp DO list END {$$ = newflow('W', $2,$4, NULL);}
 	| list
 	;
+
+elseif : ELSE list END  {$$ = newflow('E', NULL	, $2, NULL);}
+	| ELSEIF exp THEN list elseif {$$ = newflow('E', $2, $4, $5);}
+	| ELSEIF exp THEN list END {$$ = newflow('E', $2, $4, NULL);}
 
 list:	{$$=NULL}
 	| exp ';' list {

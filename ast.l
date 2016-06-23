@@ -41,6 +41,7 @@ EXP	([Ee][-+]?[0-9]+)
 "do"    { return DO; }
 "let"   { return LET;}
 "end"	{ return END;}
+"elseif" { return ELSEIF;}
 
  /* built in functions */
 "sqrt"  { yylval.fn = B_sqrt; return FUNC; }

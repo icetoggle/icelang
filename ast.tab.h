@@ -50,8 +50,9 @@
      DO = 266,
      END = 267,
      LET = 268,
-     CMP = 269,
-     UMINUS = 270
+     ELSEIF = 269,
+     CMP = 270,
+     UMINUS = 271
    };
 #endif
 
@@ -73,7 +74,7 @@ typedef union YYSTYPE
 
 
 /* Line 1676 of yacc.c  */
-#line 77 "ast.tab.h"
+#line 78 "ast.tab.h"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
