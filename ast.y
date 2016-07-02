@@ -1,5 +1,6 @@
+%define api.pure
+%parse-param { struct pcdata *pp }
 %{
-#include "ast.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -12,12 +13,17 @@
 	struct symlist *sl;
 	int fn;
 }
+%{
+#  include "ast.lex.h"
+#  include "ast.h"
+#define YYLEX_PARAM pp->scaninfo
+%}
 
 %token <d> NUMBER
 %token <s> NAME
 %token <fn> FUNC
 %token EOL
-%token IF THEN ELSE WHILE DO END LET ELSEIF
+%token IF THEN ELSE WHILE DO END DEF ELSEIF
 
 %nonassoc <fn> CMP
 %right '='
@@ -29,59 +35,58 @@
 
 %start calclist
 %%
-stmt: IF exp THEN list END {$$ = newflow('I',$2,$4,NULL);}
-	| IF exp THEN list elseif {$$ = newflow('I',$2,$4, $5);}
-	| WHILE exp DO list END {$$ = newflow('W', $2,$4, NULL);}
+stmt: IF exp THEN list END {$$ = newflow(pp,'I',$2,$4,NULL);}
+	| IF exp THEN list elseif {$$ = newflow(pp, 'I',$2,$4, $5);}
+	| WHILE exp DO list END {$$ = newflow(pp, 'W', $2,$4, NULL);}
 	| list
 	;
 
-elseif : ELSE list END  {$$ = newflow('E', NULL	, $2, NULL);}
-	| ELSEIF exp THEN list elseif {$$ = newflow('E', $2, $4, $5);}
-	| ELSEIF exp THEN list END {$$ = newflow('E', $2, $4, NULL);}
+elseif : ELSE list END  {$$ = newflow(pp, 'E', NULL	, $2, NULL);}
+	| ELSEIF exp THEN list elseif {$$ = newflow(pp, 'E', $2, $4, $5);}
+	| ELSEIF exp THEN list END {$$ = newflow(pp, 'E', $2, $4, NULL);}
 
-list:	{$$=NULL}
+list:	{$$=NULL;}
 	| exp ';' list {
 		if($3 == NULL)
 			$$ = $1;
 		else
-			$$ = newast('L',$1,$3);
+			$$ = newast(pp, 'L',$1,$3);
 	}
 	;
 
-exp: exp CMP exp {$$ = newcmp($2, $1, $3);}
-	| exp '+' exp {$$ = newast('+',$1, $3);}
-	| exp '-' exp {$$ = newast('-',$1, $3);}
-	| exp '*' exp {$$ = newast('*',$1, $3);}
-	| exp '/' exp {$$ = newast('/',$1, $3);}
-	| '|' exp {$$ = newast('|',$2, NULL);}
+exp: exp CMP exp {$$ = newcmp(pp, $2, $1, $3);}
+	| exp '+' exp {$$ = newast(pp, '+',$1, $3);}
+	| exp '-' exp {$$ = newast(pp, '-',$1, $3);}
+	| exp '*' exp {$$ = newast(pp, '*',$1, $3);}
+	| exp '/' exp {$$ = newast(pp, '/',$1, $3);}
+	| '|' exp {$$ = newast(pp, '|',$2, NULL);}
 	| '(' exp ')' {$$ = $2;}
-	| '-' exp %prec UMINUS {$$ = newast('M', $2, NULL);}
-	| NUMBER {$$ = newnum($1);}
-	| NAME {$$ = newref($1);}
-	| NAME '=' exp {$$ = newasgn($1,$3);}
-	| FUNC '(' explist ')' {$$ = newfunc($1, $3);}
-	| NAME '(' explist ')' {$$ = newcall($1, $3);}
+	| '-' exp %prec UMINUS {$$ = newast(pp, 'M', $2, NULL);}
+	| NUMBER {$$ = newnum(pp, $1);}
+	| NAME {$$ = newref(pp, $1);}
+	| NAME '=' exp {$$ = newasgn(pp, $1,$3);}
+	| FUNC '(' explist ')' {$$ = newfunc(pp, $1, $3);}
+	| NAME '(' explist ')' {$$ = newcall(pp, $1, $3);}
 	;
 
 explist: exp 
-	| exp ',' explist {$$ = newast('L', $1, $3);}
+	| exp ',' explist {$$ = newast(pp, 'L', $1, $3);}
 	;
 
-symlist: NAME {$$ = newsymlist($1, NULL)}
-		| NAME ',' symlist {$$ = newsymlist($1, $3);}
+symlist: NAME {$$ = newsymlist(pp, $1, NULL);}
+		| NAME ',' symlist {$$ = newsymlist(pp, $1, $3);}
 
 calclist:
-	| calclist stmt EOL {
-		printf("= %4.4g\n",eval($2));
-		treefree($2);
-		printf("> ");
+	stmt EOL {
+		pp->ast = $1;
+		YYACCEPT;	
 	}
-	| calclist LET NAME '(' symlist ')' '=' list EOL {
-		dodef($3, $5, $8);
-		printf("Defined %s\n> ", $3->name);
+	| DEF NAME '(' symlist ')' list END {
+		dodef(pp, $2, $4, $6);
+		printf("%d: Defined %s\n> ", yyget_lineno(pp->scaninfo), $2->name);
+		pp->ast = NULL;
+		YYACCEPT;
 		}
-	| calclist error EOL { yyerrok;printf("> ");}
-	;
 	;
 
 %%
