@@ -5,6 +5,18 @@
 #include <string.h>
 #include <math.h>
 #include "ast.tab.h"
+
+void
+yyerror(struct pcdata *pp, char *s, ...)
+{
+    va_list ap;
+    va_start(ap, s);
+    
+    fprintf(stderr, "%d: error: ", yyget_lineno(pp->scaninfo));
+    vfprintf(stderr, s, ap);
+    fprintf(stderr, "\n");
+}
+
 struct ast *
 	newast(struct pcdata *pp, int nodetype, struct ast *l, struct ast *r)
 {
@@ -175,16 +187,7 @@ void treefree(struct pcdata *pp, struct ast *a) {
 	free(a);
 }
 
-void
-yyerror(struct pcdata *pp, char *s, ...)
-{
-	va_list ap;
-	va_start(ap, s);
 
-	fprintf(stderr, "%d: error: ", yyget_lineno(pp->scaninfo));
-	vfprintf(stderr, s, ap);
-	fprintf(stderr, "\n");
-}
 
 static unsigned symhash(char *sym) {
 	unsigned int hash = 0;
@@ -201,13 +204,13 @@ struct symbol* lookup(struct pcdata *pp, char *sym) {
 			return sp;
 		}
 		if (!sp->name) {
-			sp->name = _strdup(sym);
+			sp->name = strdup(sym);
 			sp->value = 0;
 			sp->func = NULL;
 			sp->syms = NULL;
 			return sp;
 		}
-		if (++sp >= symtab + NHASH) sp = symtab;
+		if (++sp >= (pp->symtab + NHASH)) sp = pp->symtab;
 	}
 	yyerror(pp, "symbol table overflow\n");
 	abort();

@@ -514,7 +514,6 @@ static yyconst flex_int32_t yy_rule_can_match_eol[39] =
 #line 1 "ast.l"
 
 #line 13 "ast.l"
-#define fileno _fileno
 /* float exponent */
 #line 520 "lex.yy.c"
 

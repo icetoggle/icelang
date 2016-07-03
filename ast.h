@@ -1,15 +1,29 @@
-#pragma once
-typedef void *yyscan_t;
-extern int yylineno;
+#ifndef AST_H_
+#define AST_H_ 1
 extern int debug;
-void yyerror(struct pcdata *, char *s, ...);
+struct symbol;
+struct symlist;
 
-/*·ÖÎöÊı¾İ*/
+struct symlist {
+    struct symbol *sym;
+    struct symlist *next;
+};
+
+struct symbol {
+    char *name;
+    double value;
+    struct ast *func;
+    struct symlist *syms;
+};
+
+
 struct pcdata {
-	yyscan_t scaninfo;
+	void* scaninfo;
 	struct symbol *symtab;
 	struct ast* ast;
 };
+
+void yyerror(struct pcdata *, char *s, ...);
 
 struct ast {
 	int nodetype;
@@ -22,21 +36,11 @@ struct  numval {
 	double number;
 };
 
-struct symbol {
-	char *name;
-	double value;
-	struct ast *func;
-	struct symlist *syms;
-};
+
 
 #define NHASH 9997
-struct symbol symtab[NHASH];
 struct symbol *lookup(struct pcdata *,char*);
 
-struct symlist {
-	struct symbol *sym;
-	struct symlist *next;
-};
 
 
 
@@ -89,3 +93,5 @@ struct ast *newref(struct pcdata *, struct symbol *s);
 struct ast *newasgn(struct pcdata *, struct symbol *s, struct ast *v);
 struct ast *newflow(struct pcdata *, int nodetype, struct ast *cond, struct ast* tl, struct ast *tr);
 void dodef(struct pcdata *, struct symbol *name, struct symlist *syms, struct ast *func);
+
+#endif
